@@ -1,0 +1,13 @@
+helm_home: /root/.helm
+config_file: /root/.kube/config
+helm_cmd: /usr/bin/helm
+values_dir: /home/helm/values
+
+dlt_templates:
+  nms: create_nms.tpl
+
+charts:
+  nms: 
+    chart_name: /home/ubuntu/charts/nms
+    version: 0.1.0
+namespace: default

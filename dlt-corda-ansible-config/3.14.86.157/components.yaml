@@ -1,0 +1,45 @@
+dlt:
+  corda:
+    nms:
+      # Should be a name without '.'
+      nmshelm:
+        # Configuration values for the nms node
+        config:
+          nodeName: network-map
+          metadata:
+            namespace: default
+          image:
+            containerName: adopfrablockchain.azurecr.io/nms:0.3.11-network-map-service
+            initContainerName: adopfrablockchain.azurecr.io/alpine-utils:1.0
+            imagePullSecret: regcred
+            env:
+              - name: NMS_PORT
+                value: 8080
+              - name: NMS_ROOT_CA_NAME
+                value: "CN=Corda Root CA, OU=FRA, O=FRA, L=London, ST=London, C=BR"
+              - name: NMS_TLS
+                value: false
+              - name: NMS_DOORMAN
+                value: true
+              - name: NMS_CERTMAN
+                value: false
+              - name: NMS_DB
+                value: /opt/cordite/db
+              - name: NMS_MONGO_CONNECTION_STRING
+                value: embed
+              - name: NMS_AUTH_USERNAME
+                value: sa
+          storage:
+            provisioner: kubernetes.io/azure-file
+            memory: 3Gi
+            type:  standard
+          service:
+            type: LoadBalancer
+            nodePort: 30050
+          vault:
+            address: https://51.141.47.56:8200
+            role: vault-role
+            authpath: cordanms
+            serviceaccountname: vault-auth-nms
+            secretprefix: nms
+            secretnmspass: nms/credentials?adminpass

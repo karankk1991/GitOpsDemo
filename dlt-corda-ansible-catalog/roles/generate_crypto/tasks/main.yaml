@@ -1,0 +1,23 @@
+---
+- name: Ensure {{ certs_dir }} dir exists
+  file:
+    path: "{{ certs_dir }}"
+    recurse: yes
+    state: directory
+  become: yes
+  become_user: root
+
+- name: Downloads certs from nms
+  shell: |
+    sleep 50s
+    cd {{ certs_dir }}
+    NMS_URL="http://"$(kubectl get services | grep network-map | awk '{ print $4 }')":8080"
+    curl -X GET ${NMS_URL}/network-map/truststore -o {{ certs_dir }}/network-map-truststore.jks
+    ls
+  register: download_task
+  become: yes
+  become_user: root
+ 
+- debug:
+    var: download_task.stdout
+

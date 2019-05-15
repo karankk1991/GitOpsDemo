@@ -1,0 +1,11 @@
+- hosts: dev
+  tasks:
+  - name: Retrieve nms ipaddress
+    shell: |
+      NMS_URL="http://"$(kubectl get services | grep network-map | awk '{ print $4 }')":8080"
+      echo $NMS_URL
+      exit 0
+    register: shell_output
+  - debug:
+    var: shell_output.stdout_lines
+

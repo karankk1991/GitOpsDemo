@@ -1,0 +1,15 @@
+- name: "create nms"
+  include_role:
+    name: dlt_component
+  vars:
+    component_name: "{{ item.key }}"
+    component_config: "{{ item.value['config'] }}"
+    platform: "corda"
+    type: "nms"  
+  loop: "{{ dlt['corda']['nms'] | default({}) | dict2items }}"
+
+- name: "Generate crypto from nms certificate"
+  include_role:
+    name: generate_crypto
+
+

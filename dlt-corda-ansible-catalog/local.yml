@@ -1,0 +1,5 @@
+---
+- hosts: corda1
+  remote_user: ubuntu
+  roles:
+    - role: nms

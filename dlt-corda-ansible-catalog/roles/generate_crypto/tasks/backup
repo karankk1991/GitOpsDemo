@@ -1,0 +1,52 @@
+---
+- name: Ensure {{ certs_dir }} dir exists
+  file:
+    path: "{{ certs_dir }}"
+    recurse: yes
+    state: directory
+  become: yes
+  become_user: root
+
+- name: Downloads certs from nms
+  shell: |
+    sleep 50s
+    cd {{ certs_dir }}
+    NMS_URL="http://"$(kubectl get services | grep network-map | awk '{ print $4 }')":8080"
+    curl -X GET ${NMS_URL}/network-map/truststore -o {{ certs_dir }}/network-map-truststore.jks
+    ls
+    export VAULT_ADDR=http://localhost:8200
+    export VAULT_TOKEN=15943862-e25f-05d4-faa2-f75e163d6150
+    export PATH=$PATH:/usr/local/bin/vault
+    VAULT_POD=$(eval "kubectl get po --selector=app=vault -o name | cut -d'/' -f2")
+    kubectl port-forward $VAULT_POD 8200:8200 > vault.log 2>&1 &
+    
+    #****************************************************************************************************************************************
+    #										adding network-map-truststore.jks into vault
+    #****************************************************************************************************************************************
+
+    vault kv put bank1/certs/networkmaptruststore network-map-truststore.jks="$(cat network-map-truststore.jks | base64)"
+    vault kv put bank2/certs/networkmaptruststore network-map-truststore.jks="$(cat network-map-truststore.jks | base64)"
+    vault kv put issuer/certs/networkmaptruststore network-map-truststore.jks="$(cat network-map-truststore.jks | base64)"
+    vault kv put centralbank/certs/networkmaptruststore network-map-truststore.jks="$(cat network-map-truststore.jks | base64)"
+    vault kv put notary/certs/networkmaptruststore network-map-truststore.jks="$(cat network-map-truststore.jks | base64)"
+    
+    
+    #In the commands below value of rootToken should be changed to new VAULT_TOKEN
+    #****************************************************************************************************************************************
+    #											Saving credentials into the vault
+    #****************************************************************************************************************************************
+    
+    vault kv put bank1/credentials dataSourcePassword="" rpcPassword="test" keyStorePassword="cordacadevpass" trustStorePassword="trustpass" rootToken="f7245ba7-2241-4a50-e7be-8eacd60d0668"
+    vault kv put bank2/credentials dataSourcePassword="" rpcPassword="test" keyStorePassword="cordacadevpass" trustStorePassword="trustpass" rootToken="f7245ba7-2241-4a50-e7be-8eacd60d0668"
+    vault kv put issuer/credentials dataSourcePassword="" rpcPassword="test" keyStorePassword="cordacadevpass" trustStorePassword="trustpass" rootToken="f7245ba7-2241-4a50-e7be-8eacd60d0668"
+    vault kv put centralbank/credentials dataSourcePassword="" rpcPassword="test" keyStorePassword="cordacadevpass" trustStorePassword="trustpass" rootToken="f7245ba7-2241-4a50-e7be-8eacd60d0668"
+    vault kv put notary/credentials dataSourcePassword="" rpcPassword="test" keyStorePassword="cordacadevpass" trustStorePassword="trustpass" nmsUserPassword="admin" rootToken="f7245ba7-2241-4a50-e7be-8eacd60d0668" 
+    
+    #****************************************************************************************************************************************
+  register: download_task
+  become: yes
+  become_user: root
+ 
+- debug:
+    var: download_task.stdout
+
